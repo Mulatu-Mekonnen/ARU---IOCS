@@ -1,45 +1,38 @@
 "use client";
+
 import { useEffect, useState } from "react";
 
-export default function AgendaManagement() {
+export default function ViewerDashboardClient() {
   const [agendas, setAgendas] = useState([]);
-  const [offices, setOffices] = useState([]);
   const [officeFilter, setOfficeFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [offices, setOffices] = useState([]);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
     loadAgendas();
-  }, [officeFilter, statusFilter, page]);
+  }, [officeFilter, page]);
 
   useEffect(() => {
     fetch("/api/admin/offices")
-      .then((r) => r.json())
+      .then((r) => {
+        if (r.ok) return r.json();
+        else throw new Error('Failed to fetch offices');
+      })
       .then(setOffices)
-      .catch(console.error);
+      .catch(() => setOffices([]));
   }, []);
 
   async function loadAgendas() {
     const params = new URLSearchParams();
+    params.set("status", "APPROVED");
     if (officeFilter) params.set("officeId", officeFilter);
-    if (statusFilter) params.set("status", statusFilter);
     params.set("page", page);
     params.set("pageSize", 20);
     const res = await fetch(`/api/admin/agendas?${params.toString()}`);
     const data = await res.json();
     setAgendas(data.agendas);
     setTotal(data.total);
-  }
-
-  async function performAction(id, action, extra = {}) {
-    const body = { action, ...extra };
-    await fetch(`/api/admin/agendas/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    loadAgendas();
   }
 
   function statusBadge(status) {
@@ -55,7 +48,7 @@ export default function AgendaManagement() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">Agenda Management</h1>
+      <h1 className="text-2xl font-semibold mb-6">Viewer Dashboard</h1>
 
       <div className="flex flex-wrap gap-4 mb-4">
         <select
@@ -70,20 +63,6 @@ export default function AgendaManagement() {
             <option key={o.id} value={o.id}>{o.name}</option>
           ))}
         </select>
-        <select
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setPage(1);
-          }}
-          className="border p-2 rounded"
-        >
-          <option value="">All Statuses</option>
-          <option value="PENDING">Pending</option>
-          <option value="APPROVED">Approved</option>
-          <option value="REJECTED">Rejected</option>
-          <option value="FORWARDED">Forwarded</option>
-          <option value="ARCHIVED">Archived</option>
-        </select>
       </div>
 
       <table className="w-full border rounded-lg bg-arsiLight shadow">
@@ -91,12 +70,12 @@ export default function AgendaManagement() {
           <tr>
             <th className="p-3">ID</th>
             <th className="p-3">Title</th>
-            <th classitype="p-3">Sender</th>
+            <th className="p-3">Sender</th>
             <th className="p-3">Receiver</th>
             <th className="p-3">Created By</th>
             <th className="p-3">Status</th>
             <th className="p-3">Created At</th>
-            <th className="p-3">Actions</th>
+            <th className="p-3">Attachment</th>
           </tr>
         </thead>
         <tbody>
@@ -117,37 +96,13 @@ export default function AgendaManagement() {
                 </span>
               </td>
               <td className="p-3">{new Date(agenda.createdAt).toLocaleDateString()}</td>
-              <td className="p-3 flex flex-wrap gap-2">
-                <button
-                  onClick={() => alert(JSON.stringify(agenda, null, 2))}
-                  className="px-3 py-1 bg-gray-300 rounded"
-                >
-                  View
-                </button>
-                {(agenda.status === "PENDING") && (
-                  <>
-                    <button
-                      onClick={() => performAction(agenda.id, "approve")}
-                      className="px-3 py-1 bg-arsiBlue text-white rounded"
-                    >
-                      Approve
-                    </button>
-                    <button
-                      onClick={() => performAction(agenda.id, "reject")}
-                      className="px-3 py-1 bg-red-500 text-white rounded"
-                    >
-                      Reject
-                    </button>
-                    <button
-                      onClick={() => {
-                        const rid = prompt("Receiver office ID (pick from dropdown)?");
-                        if (rid) performAction(agenda.id, "forward", { receiverOfficeId: rid });
-                      }}
-                      className="px-3 py-1 bg-blue-500 text-white rounded"
-                    >
-                      Forward
-                    </button>
-                  </>
+              <td className="p-3">
+                {agenda.attachment ? (
+                  <a href={agenda.attachment} className="text-arsiBlue underline" target="_blank" rel="noopener noreferrer">
+                    Download
+                  </a>
+                ) : (
+                  "-"
                 )}
               </td>
             </tr>
@@ -155,7 +110,6 @@ export default function AgendaManagement() {
         </tbody>
       </table>
 
-      {/* pagination */}
       {total > agendas.length && (
         <div className="mt-4 flex justify-between">
           <button

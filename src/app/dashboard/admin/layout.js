@@ -10,13 +10,14 @@ export default function AdminLayout({ children }) {
     { name: "Dashboard", href: "/dashboard/admin" },
     { name: "Users", href: "/dashboard/admin/users" },
     { name: "Agendas", href: "/dashboard/admin/agendas" },
+    { name: "Offices", href: "/dashboard/admin/offices" },
   ];
 
   return (
     <div className="flex min-h-screen bg-gray-100">
       
       {/* Sidebar */}
-      <aside className="w-64 bg-white shadow-lg hidden md:flex flex-col">
+      <aside className="w-64 bg-arsiLight shadow-lg hidden md:flex flex-col">
         <div className="p-6 border-b">
           <h2 className="text-xl font-bold text-gray-800">
             Admin Panel
@@ -30,7 +31,7 @@ export default function AdminLayout({ children }) {
               href={item.href}
               className={`block px-4 py-2 rounded-lg transition ${
                 pathname === item.href
-                  ? "bg-blue-600 text-white"
+                  ? "bg-arsiBlue text-white"
                   : "text-gray-700 hover:bg-gray-200"
               }`}
             >
@@ -40,7 +41,7 @@ export default function AdminLayout({ children }) {
         </nav>
 
         <div className="p-4 border-t text-sm text-gray-500">
-          Inter Office System
+          Arsi University System
         </div>
       </aside>
 

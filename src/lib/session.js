@@ -1,19 +1,20 @@
 // src/lib/session.js
 const { cookies } = require('next/headers');
 const { PrismaClient } = require('@prisma/client');
+const jwt = require('jsonwebtoken');
 
 const prisma = new PrismaClient();
 
 async function getSessionUser() {
   const cookieStore = await cookies();   // ← await here is required!
-  const sessionToken = cookieStore.get('session')?.value;
+  const token = cookieStore.get('token')?.value;
 
-  if (!sessionToken) return null;
+  if (!token) return null;
 
   try {
-    const userId = Number(sessionToken);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await prisma.user.findUnique({
-      where: { id: userId },
+      where: { id: decoded.id },
       select: {
         id: true,
         name: true,
@@ -40,7 +41,7 @@ function createSession(userId) {
 }
 
 function destroySession() {
-  cookies().delete('session');
+  cookies().delete('token');
 }
 
 module.exports = { getSessionUser, createSession, destroySession };

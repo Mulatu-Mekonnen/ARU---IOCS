@@ -1,28 +1,34 @@
 "use client";
+
 import { useEffect, useState } from "react";
 
-export default function AgendaManagement() {
+export default function HeadDashboardClient() {
   const [agendas, setAgendas] = useState([]);
   const [offices, setOffices] = useState([]);
-  const [officeFilter, setOfficeFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [staff, setStaff] = useState([]);
+  const [statusFilter, setStatusFilter] = useState("PENDING");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
     loadAgendas();
-  }, [officeFilter, statusFilter, page]);
+  }, [statusFilter, page]);
 
   useEffect(() => {
     fetch("/api/admin/offices")
       .then((r) => r.json())
       .then(setOffices)
       .catch(console.error);
+
+    // load staff in office for head
+    fetch("/api/admin/users")
+      .then((r) => r.json())
+      .then((u) => setStaff(u))
+      .catch(console.error);
   }, []);
 
   async function loadAgendas() {
     const params = new URLSearchParams();
-    if (officeFilter) params.set("officeId", officeFilter);
     if (statusFilter) params.set("status", statusFilter);
     params.set("page", page);
     params.set("pageSize", 20);
@@ -55,21 +61,8 @@ export default function AgendaManagement() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-semibold mb-6">Agenda Management</h1>
-
+      <h1 className="text-2xl font-semibold mb-6">Head Dashboard</h1>
       <div className="flex flex-wrap gap-4 mb-4">
-        <select
-          onChange={(e) => {
-            setOfficeFilter(e.target.value);
-            setPage(1);
-          }}
-          className="border p-2 rounded"
-        >
-          <option value="">All Offices</option>
-          {offices.map((o) => (
-            <option key={o.id} value={o.id}>{o.name}</option>
-          ))}
-        </select>
         <select
           onChange={(e) => {
             setStatusFilter(e.target.value);
@@ -91,7 +84,7 @@ export default function AgendaManagement() {
           <tr>
             <th className="p-3">ID</th>
             <th className="p-3">Title</th>
-            <th classitype="p-3">Sender</th>
+            <th className="p-3">Sender</th>
             <th className="p-3">Receiver</th>
             <th className="p-3">Created By</th>
             <th className="p-3">Status</th>
@@ -124,7 +117,7 @@ export default function AgendaManagement() {
                 >
                   View
                 </button>
-                {(agenda.status === "PENDING") && (
+                {agenda.status === "PENDING" && (
                   <>
                     <button
                       onClick={() => performAction(agenda.id, "approve")}
@@ -155,7 +148,6 @@ export default function AgendaManagement() {
         </tbody>
       </table>
 
-      {/* pagination */}
       {total > agendas.length && (
         <div className="mt-4 flex justify-between">
           <button
@@ -177,6 +169,31 @@ export default function AgendaManagement() {
           </button>
         </div>
       )}
+
+      {/* office staff section */}
+      <div className="mt-8">
+        <h2 className="text-xl font-semibold mb-3">Staff in Your Office</h2>
+        <table className="w-full border rounded-lg bg-arsiLight shadow">
+          <thead className="bg-arsiLight text-left">
+            <tr>
+              <th className="p-3">Name</th>
+              <th className="p-3">Email</th>
+              <th className="p-3">Role</th>
+              <th className="p-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {staff.map((u) => (
+              <tr key={u.id} className="border-t hover:bg-gray-50">
+                <td className="p-3">{u.name}</td>
+                <td className="p-3">{u.email}</td>
+                <td className="p-3">{u.role}</td>
+                <td className="p-3">{u.active ? "Active" : "Inactive"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

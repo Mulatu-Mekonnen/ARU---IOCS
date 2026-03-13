@@ -5,7 +5,7 @@ export async function GET() {
     // Temporary dummy data
     return NextResponse.json({
       totalUsers: 25,
-      totalAgendas: 48,
+      totalAgendas: 4,
       pendingAgendas: 6,
     });
   } catch (error) {

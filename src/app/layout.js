@@ -20,8 +20,15 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
       >
+        {/* global header */}
+        <header className="bg-arsiBlue text-white">
+          <div className="max-w-7xl mx-auto px-4 py-2 flex items-center">
+            <img src="/logo.png" alt="Arsi University" className="h-8 w-auto mr-3" />
+            <span className="font-bold text-lg">Arsi University Communication System</span>
+          </div>
+        </header>
         {children}
       </body>
     </html>

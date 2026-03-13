@@ -1,24 +1,65 @@
 import { prisma } from "@/lib/prisma";
-import { roleGuard } from "@/lib/roleGuard";
+import { roleGuard } from "@/lib/requireAdmin";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
     await roleGuard("ADMIN");
 
-    const [totalUsers, totalAgendas, pendingAgendas] =
-      await Promise.all([
-        prisma.user.count(),
-        prisma.agenda.count(),
-        prisma.agenda.count({ where: { status: "PENDING" } }),
-      ]);
+    const [totalUsers, totalOffices, totalAgendas] = await Promise.all([
+      prisma.user.count(),
+      prisma.office.count(),
+      prisma.agenda.count(),
+    ]);
+
+    const pendingAgendas = await prisma.agenda.count({
+      where: { status: "PENDING" },
+    });
+    const approvedAgendas = await prisma.agenda.count({
+      where: { status: "APPROVED" },
+    });
+    const rejectedAgendas = await prisma.agenda.count({
+      where: { status: "REJECTED" },
+    });
+
+    const statusGroups = await prisma.agenda.groupBy({
+      by: ["status"],
+      _count: { status: true },
+    });
+
+    const officeGroupsRaw = await prisma.agenda.groupBy({
+      by: ["senderOfficeId"],
+      _count: { id: true },
+    });
+    // fetch office names
+    const officeIds = officeGroupsRaw
+      .map((g) => g.senderOfficeId)
+      .filter((id) => id !== null);
+    const offices = await prisma.office.findMany({
+      where: { id: { in: officeIds } },
+      select: { id: true, name: true },
+    });
+    const officeMap = offices.reduce((acc, o) => {
+      acc[o.id] = o.name;
+      return acc;
+    }, {});
+    const officeGroups = officeGroupsRaw.map((g) => ({
+      ...g,
+      name: g.senderOfficeId ? officeMap[g.senderOfficeId] || "-" : "-",
+    }));
 
     return NextResponse.json({
       totalUsers,
+      totalOffices,
       totalAgendas,
       pendingAgendas,
+      approvedAgendas,
+      rejectedAgendas,
+      statusGroups,
+      officeGroups,
     });
-  } catch {
+  } catch (err) {
+    console.error(err);
     return NextResponse.json(
       { message: "Forbidden" },
       { status: 403 }

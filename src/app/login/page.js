@@ -44,7 +44,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
+      <div className="max-w-md w-full bg-arsiLight rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Sign In</h1>
           <p className="mt-2 text-gray-600">
@@ -63,8 +63,8 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="admin@office.com"
+              className="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-arsiBlue focus:border-arsiBlue"
+              placeholder="username or email"
             />
           </div>
 
@@ -78,7 +78,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="mt-1 block w-full px-4 py-3 border border-gray-700 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              className="mt-1 block w-full px-4 py-3 border border-gray-700 rounded-lg shadow-sm focus:ring-arsiBlue focus:border-arsiBlue"
               placeholder="••••••••"
             />
           </div>
@@ -92,7 +92,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-3 px-4 bg-blue-600 text-white font-medium rounded-lg shadow hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${
+            className={`w-full py-3 px-4 bg-arsiBlue text-white font-medium rounded-lg shadow hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-arsiGold focus:ring-offset-2 transition-colors disabled:bg-gray-300 disabled:text-gray-600 ${
               loading ? 'opacity-70 cursor-not-allowed' : ''
             }`}
           >

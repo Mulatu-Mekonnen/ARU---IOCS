@@ -31,13 +31,8 @@ export async function POST(req) {
       { expiresIn: "1d" }
     );
 
-    const redirectTo =
-      user.role === "ADMIN"
-        ? "/dashboard/admin"
-        : "/dashboard/staff";
-
     const response = NextResponse.json({
-      redirectTo,
+      redirectTo: "/",
     });
 
     // ✅ SET COOKIE

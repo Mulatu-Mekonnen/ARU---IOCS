@@ -7,26 +7,31 @@ async function main() {
   const adminPassword = await bcrypt.hash("admin123", 10);
   const userPassword = await bcrypt.hash("user123", 10);
 
-await prisma.user.createMany({
-  data: [
-    {
-      name: "System Admin",
-      email: "admin@office.com",
-      password: adminPassword,
-      role: "ADMIN",
-      office: "Head Office",
-    },
-    {
-      name: "Office Staff",
-      email: "staff@office.com",
-      password: userPassword,
-      role: "OFFICE_STAFF",
-      office: "Branch Office",
-    },
-  ],
-});
+  // create some offices
+  const headOffice = await prisma.office.create({ data: { name: "Head Office" } });
+  const branchOffice = await prisma.office.create({ data: { name: "Branch Office" } });
 
-  console.log("✅ Users created successfully!");
+  // create users
+  await prisma.user.createMany({
+    data: [
+      {
+        name: "System Admin",
+        email: "admin@office.com",
+        password: adminPassword,
+        role: "ADMIN",
+        officeId: headOffice.id,
+      },
+      {
+        name: "Office Staff",
+        email: "staff@office.com",
+        password: userPassword,
+        role: "STAFF",
+        officeId: branchOffice.id,
+      },
+    ],
+  });
+
+  console.log("✅ Users and offices created successfully!");
 }
 
 main()

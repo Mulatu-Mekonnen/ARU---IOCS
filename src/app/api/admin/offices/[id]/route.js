@@ -9,17 +9,13 @@ export async function PUT(req, { params }) {
   }
 
   const body = await req.json();
-
-  const user = await prisma.user.update({
+  const office = await prisma.office.update({
     where: { id: params.id },
     data: {
-      role: body.role,
-      active: body.active,
-      officeId: body.officeId,
+      name: body.name,
     },
   });
-
-  return NextResponse.json(user);
+  return NextResponse.json(office);
 }
 
 export async function DELETE(req, { params }) {
@@ -28,6 +24,6 @@ export async function DELETE(req, { params }) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  await prisma.user.delete({ where: { id: params.id } });
+  await prisma.office.delete({ where: { id: params.id } });
   return NextResponse.json({ success: true });
 }

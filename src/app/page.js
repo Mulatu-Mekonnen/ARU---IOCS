@@ -2,164 +2,114 @@ import { getSessionUser } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
+async function fetchStats() {
+  try {
+    const res = await fetch('http://localhost:3000/api/admin/users', {
+      cache: 'no-store',
+    });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
+function StatCard({ title, value }) {
+  return (
+    <div className="bg-arsiLight rounded-lg shadow p-6 text-center">
+      <div className="text-2xl font-bold">{value}</div>
+      <div className="text-gray-600">{title}</div>
+    </div>
+  );
+}
+
 export default async function Home() {
   const user = await getSessionUser();
 
   if (user) {
     if (user.role === 'ADMIN') {
       redirect('/dashboard/admin');
+    } else if (user.role === 'HEAD') {
+      redirect('/dashboard/head');
+    } else if (user.role === 'VIEWER') {
+      redirect('/dashboard/viewer');
     } else {
       redirect('/dashboard/staff');
     }
   }
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
-    }}>
-      <div style={{ maxWidth: '1200px', width: '100%', margin: '0 auto' }}>
+  const stats = await fetchStats();
 
+  return (
+    <div className="min-h-screen bg-arsiBlue flex items-center justify-center p-8">
+      <div className="max-w-6xl w-full mx-auto space-y-8">
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <div style={{
-            display: 'inline-block',
-            background: 'rgba(255,255,255,0.2)',
-            padding: '12px 24px',
-            borderRadius: '50px',
-            color: 'white',
-            fontSize: '14px',
-            fontWeight: '600',
-            border: '1px solid rgba(255,255,255,0.3)'
-          }}>
+        <div className="text-center">
+          <div className="inline-block bg-white/20 px-6 py-2 rounded-full text-arsiDark text-sm font-semibold border border-white/30">
             🏢 INTER-OFFICE AGENDA SYSTEM
           </div>
         </div>
 
         {/* Card */}
-        <div style={{
-          background: 'white',
-          borderRadius: '30px',
-          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
-          overflow: 'hidden',
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr'
-        }}>
-
+        <div className="bg-arsiLight rounded-3xl shadow-lg grid grid-cols-1 md:grid-cols-2 overflow-hidden">
           {/* Left */}
-          <div style={{
-            background: 'linear-gradient(145deg, #4834d4 0%, #686de0 100%)',
-            padding: '50px 40px',
-            color: 'white'
-          }}>
-            <h1 style={{
-              fontSize: '42px',
-              fontWeight: '800',
-              marginBottom: '20px',
-              lineHeight: '1.2'
-            }}>
-              Streamline Your<br />
-              <span style={{ color: '#ffd32a' }}>
-                Office Communications
-              </span>
+          <div className="bg-arsiBlue p-12 text-white space-y-6">
+            <h1 className="text-4xl font-extrabold leading-tight text-white">
+              Streamline Your <br />
+              <span className="text-arsiGold">Office Communications</span>
             </h1>
-
-            <p style={{
-              fontSize: '18px',
-              marginBottom: '30px',
-              lineHeight: '1.6'
-            }}>
-              The complete solution for managing inter-office agendas,
-              meetings, and department coordination.
+            <p className="text-lg">
+              The complete solution for managing inter-office agendas, meetings, and
+              department coordination.
             </p>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '20px'
-            }}>
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <div style={{ fontSize: '28px', fontWeight: 'bold' }}>250+</div>
+                <div className="text-3xl font-bold">250+</div>
                 <div>Active Offices</div>
               </div>
               <div>
-                <div style={{ fontSize: '28px', fontWeight: 'bold' }}>10k+</div>
+                <div className="text-3xl font-bold">10k+</div>
                 <div>Daily Users</div>
               </div>
             </div>
           </div>
 
           {/* Right */}
-          <div style={{ padding: '50px 40px' }}>
-            <h2 style={{
-              fontSize: '32px',
-              fontWeight: '800',
-              marginBottom: '15px'
-            }}>
-              Welcome Back 👋
-            </h2>
-
-            <p style={{
-              fontSize: '16px',
-              color: '#636e72',
-              marginBottom: '40px'
-            }}>
+          <div className="p-12 text-arsiDark">
+            <h2 className="text-3xl font-bold mb-4 text-arsiDark">Welcome Back 👋</h2>
+            <p className="text-arsiDark mb-8">
               Secure agenda management for modern offices
             </p>
 
-            {/* Button (Fixed — no event handlers) */}
             <Link
               href="/login"
-              style={{
-                display: 'block',
-                width: '100%',
-                padding: '18px',
-                background: 'linear-gradient(145deg, #4834d4, #686de0)',
-                color: 'white',
-                textAlign: 'center',
-                textDecoration: 'none',
-                borderRadius: '15px',
-                fontSize: '18px',
-                fontWeight: '600',
-                marginBottom: '20px',
-                transition: 'opacity 0.2s ease'
-              }}
+              className="block w-full py-4 bg-arsiBlue text-white text-center rounded-xl font-semibold hover:bg-arsiDark transition"
             >
-              Access Dashboard →
+              Access Dashboard <span className="text-arsiGold">→</span>
             </Link>
 
-            <div style={{
-              background: '#f5f6fa',
-              borderRadius: '15px',
-              padding: '20px',
-              textAlign: 'center'
-            }}>
-              <p style={{ marginBottom: '10px', fontWeight: '500' }}>
-                Contact your administrator
-              </p>
-              <p style={{ fontSize: '14px', color: '#636e72' }}>
+            <div className="mt-6 bg-gray-100 rounded-lg p-4 text-center">
+              <p className="font-medium mb-1">Contact your administrator</p>
+              <p className="text-sm text-gray-600">
                 to set up your account credentials
               </p>
             </div>
           </div>
-
         </div>
+
+        {/* Stats (interactive) */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+            <StatCard title="Total Users" value={stats.totalUsers || 0} />
+            <StatCard title="Total Agendas" value={stats.totalAgendas || 0} />
+            <StatCard title="Pending Approvals" value={stats.pendingAgendas || 0} />
+          </div>
+        )}
 
         {/* Footer */}
-        <div style={{
-          textAlign: 'center',
-          marginTop: '30px',
-          color: 'white',
-          fontSize: '14px'
-        }}>
+        <div className="text-center text-arsiDark text-sm">
           © 2026 IO Agenda System. All rights reserved.
         </div>
-
       </div>
     </div>
   );

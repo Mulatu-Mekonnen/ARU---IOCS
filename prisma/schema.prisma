@@ -7,6 +7,17 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model ApprovalHistory {
+  id         String   @id @default(cuid())
+  agenda     Agenda   @relation(fields: [agendaId], references: [id])
+  agendaId   String
+  action     String
+  comment    String?
+  actionBy   User     @relation("UserActions", fields: [actionById], references: [id])
+  actionById String
+  createdAt  DateTime @default(now())
+}
+
 enum Role {
   ADMIN
   HEAD
@@ -18,13 +29,16 @@ enum AgendaStatus {
   PENDING
   APPROVED
   REJECTED
+  FORWARDED
+  ARCHIVED
 }
 
 model Office {
   id        String   @id @default(uuid())
   name      String   @unique
   users     User[]
-  agendas   Agenda[]
+  sentAgendas     Agenda[] @relation("SentAgendas")
+  receivedAgendas Agenda[] @relation("ReceivedAgendas")
   createdAt DateTime @default(now())
 }
 
@@ -41,6 +55,7 @@ model User {
 
   agendas         Agenda[] @relation("CreatedAgendas")
   approvedAgendas Agenda[] @relation("ApprovedAgendas")
+  approvalActions ApprovalHistory[] @relation("UserActions")
 
   createdAt DateTime @default(now())
 }
@@ -50,16 +65,22 @@ model Agenda {
 
   title       String
   description String?
+  attachment  String?
   status      AgendaStatus @default(PENDING)
 
   createdById String
   createdBy   User   @relation("CreatedAgendas", fields: [createdById], references: [id])
 
-  officeId String?
-  office   Office? @relation(fields: [officeId], references: [id])
+  senderOfficeId   String?
+  senderOffice     Office? @relation("SentAgendas", fields: [senderOfficeId], references: [id])
+
+  receiverOfficeId String?
+  receiverOffice   Office? @relation("ReceivedAgendas", fields: [receiverOfficeId], references: [id])
 
   approvedById String?
   approvedBy   User?   @relation("ApprovedAgendas", fields: [approvedById], references: [id])
+
+  approvalHistories ApprovalHistory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

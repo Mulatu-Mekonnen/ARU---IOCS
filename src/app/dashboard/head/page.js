@@ -1,11 +1,11 @@
 import { getSessionUser } from '@/lib/session';
 import { redirect } from 'next/navigation';
-import AdminDashboardClient from './AdminDashboardClient';
+import HeadDashboardClient from './HeadDashboardClient';
 
 export default async function Page() {
   const user = await getSessionUser();
-  if (!user || user.role !== 'ADMIN') {
+  if (!user || user.role !== 'HEAD') {
     redirect('/login');
   }
-  return <AdminDashboardClient />;
+  return <HeadDashboardClient />;
 }
