@@ -4,15 +4,33 @@ import path from "path";
 import { prisma } from "@/lib/prisma";
 import { verifyRole } from "@/lib/adminGuard";
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_EXT = [".pdf", ".docx"];
 
 export const runtime = "nodejs";
+
+// Helper function to get settings
+async function getSettings() {
+  const settings = await prisma.setting.findMany();
+  const settingsObj = {};
+  settings.forEach((s) => {
+    if (s.value === "true") settingsObj[s.key] = true;
+    else if (s.value === "false") settingsObj[s.key] = false;
+    else if (!isNaN(s.value) && s.value !== "") settingsObj[s.key] = parseInt(s.value);
+    else settingsObj[s.key] = s.value;
+  });
+  return settingsObj;
+}
 
 export async function POST(request) {
   const auth = verifyRole(request, ["STAFF"]);
   if (auth.error) {
     return NextResponse.json({ error: auth.error }, { status: auth.status });
+  }
+
+  const settings = await getSettings();
+
+  if (!settings.allowFileUploads) {
+    return NextResponse.json({ error: "File uploads are currently disabled by system settings" }, { status: 400 });
   }
 
   const formData = await request.formData();
@@ -29,8 +47,9 @@ export async function POST(request) {
   const filename = file.name;
   const size = file.size;
 
-  if (size > MAX_FILE_SIZE) {
-    return NextResponse.json({ error: "File must be under 10MB" }, { status: 400 });
+  const maxSizeBytes = settings.maxFileSize * 1024 * 1024;
+  if (size > maxSizeBytes) {
+    return NextResponse.json({ error: `File must be under ${settings.maxFileSize}MB` }, { status: 400 });
   }
 
   const ext = path.extname(filename).toLowerCase();

@@ -12,7 +12,8 @@ export function middleware(request) {
     publicPaths.includes(pathname) ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/favicon.ico")
+    pathname.startsWith("/favicon.ico")||
+    pathname.startsWith("/logo.png")
   ) {
     return NextResponse.next();
   }

@@ -60,6 +60,7 @@ model User {
   approvedAgendas Agenda[] @relation("ApprovedAgendas")
   approvalActions ApprovalHistory[] @relation("UserActions")
   routedAgendas   AgendaRoute[] @relation("UserRoutedAgendas")
+  announcements   Announcement[] @relation("AnnouncementAuthor")
 
   createdAt DateTime @default(now())
 }
@@ -114,4 +115,21 @@ model AgendaRoute {
   routedById  String
 
   routedAt    DateTime @default(now())
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+  authorId  String
+  author    User     @relation("AnnouncementAuthor", fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
 }

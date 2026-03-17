@@ -4,6 +4,19 @@ import { verifyRole } from "@/lib/adminGuard";
 
 const prisma = new PrismaClient();
 
+// Helper function to get settings
+async function getSettings() {
+  const settings = await prisma.setting.findMany();
+  const settingsObj = {};
+  settings.forEach((s) => {
+    if (s.value === "true") settingsObj[s.key] = true;
+    else if (s.value === "false") settingsObj[s.key] = false;
+    else if (!isNaN(s.value) && s.value !== "") settingsObj[s.key] = parseInt(s.value);
+    else settingsObj[s.key] = s.value;
+  });
+  return settingsObj;
+}
+
 // GET all agendas with office filter
 export async function GET(request) {
   try {
@@ -18,6 +31,9 @@ export async function GET(request) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
     const skip = (page - 1) * pageSize;
+
+    const allowedStatuses = ["PENDING", "APPROVED", "REJECTED", "FORWARDED", "ARCHIVED"];
+    const normalizedStatus = allowedStatuses.includes(status) ? status : null;
 
     // build where clause depending on role
     const where = {};
@@ -34,18 +50,9 @@ export async function GET(request) {
         // if head without office, return empty
         where.id = null;
       }
-      if (status) where.status = status;
-      // ignore officeId filter for HEAD because it is already limited
+      if (normalizedStatus) where.status = normalizedStatus;
     }
 
-    // STAFF sees only agendas they created
-    if (auth.user.role === "STAFF") {
-      where.createdById = auth.user.id;
-      if (status) where.status = status;
-      // office filter ignored
-    }
-
-    // VIEWER sees only approved agendas, can filter by office
     if (auth.user.role === "VIEWER") {
       where.status = "APPROVED";
       if (officeId) {
@@ -54,16 +61,14 @@ export async function GET(request) {
           { receiverOfficeId: officeId },
         ];
       }
-      if (status) {
-        // override status filter but keep APPROVED only
-        where.status = "APPROVED";
-      }
+      // always force APPROVED
+      // ignore other status filters
     }
 
     // ADMIN gets full access, apply query params normally
     if (auth.user.role === "ADMIN") {
       if (officeId) where.senderOfficeId = officeId;
-      if (status) where.status = status;
+      if (normalizedStatus) where.status = normalizedStatus;
     }
 
     const [agendas, total] = await Promise.all([
@@ -97,6 +102,18 @@ export async function POST(request) {
     }
 
     const body = await request.json();
+    const settings = await getSettings();
+
+    // Check file upload settings
+    if (body.attachmentUrl && !settings.allowFileUploads) {
+      return NextResponse.json({ error: "File uploads are currently disabled" }, { status: 400 });
+    }
+
+    if (body.attachmentSize && body.attachmentSize > (settings.maxFileSize * 1024 * 1024)) {
+      return NextResponse.json({ 
+        error: `File size exceeds maximum limit of ${settings.maxFileSize}MB` 
+      }, { status: 400 });
+    }
 
     // determine sender office from user record
     let senderOfficeId = null;
@@ -115,7 +132,7 @@ export async function POST(request) {
         receiverOfficeId: body.receiverOfficeId || null,
         currentOfficeId: body.receiverOfficeId || senderOfficeId,
         createdById: auth.user.id,
-        status: "PENDING",
+        status: settings.requireApprovalForAll ? "PENDING" : "APPROVED",
         // if client already uploaded file and passed metadata
         attachmentUrl: body.attachmentUrl || null,
         attachmentName: body.attachmentName || null,
