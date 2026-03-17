@@ -53,11 +53,11 @@ export default function AdminLayout({ children }) {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-lg transform transition-transform duration-300 ease-in-out ${
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-gradient-to-br from-blue-50 to-indigo-50 shadow-lg transform transition-transform duration-300 ease-in-out ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } md:translate-x-0 md:static md:inset-0`}>
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">Admin Panel</h2>
+          <h2 className="text-xl font-bold text-yellow-500">Admin Panel</h2>
           <button
             onClick={() => setSidebarOpen(false)}
             className="md:hidden text-gray-500 hover:text-gray-700"

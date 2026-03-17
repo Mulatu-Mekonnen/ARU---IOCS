@@ -82,6 +82,7 @@ export async function PATCH(request, { params }) {
 
     if (action === "approve") {
       status = "APPROVED";
+      data.approvedById = auth.user.id;
     }
     if (action === "reject") {
       status = "REJECTED";

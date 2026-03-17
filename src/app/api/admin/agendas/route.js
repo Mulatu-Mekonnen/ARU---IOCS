@@ -28,6 +28,7 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const officeId = searchParams.get("officeId");
     const status = searchParams.get("status");
+    const search = searchParams.get("search");
     const page = parseInt(searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
     const skip = (page - 1) * pageSize;
@@ -38,14 +39,32 @@ export async function GET(request) {
     // build where clause depending on role
     const where = {};
 
+    // Add search filter if provided
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: "insensitive" } },
+        { description: { contains: search, mode: "insensitive" } },
+      ];
+    }
+
     // HEAD sees agendas related to their office (sender or receiver)
     if (auth.user.role === "HEAD") {
       const user = await prisma.user.findUnique({ where: { id: auth.user.id } });
       if (user.officeId) {
-        where.OR = [
-          { senderOfficeId: user.officeId },
-          { receiverOfficeId: user.officeId },
-        ];
+        const officeConstraint = {
+          OR: [
+            { senderOfficeId: user.officeId },
+            { receiverOfficeId: user.officeId },
+          ],
+        };
+
+        if (where.OR) {
+          // combine search OR with office OR via AND
+          where.AND = [{ OR: where.OR }, officeConstraint];
+          delete where.OR;
+        } else {
+          Object.assign(where, officeConstraint);
+        }
       } else {
         // if head without office, return empty
         where.id = null;
