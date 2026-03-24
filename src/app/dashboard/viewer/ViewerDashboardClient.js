@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Bell, ChevronDown, User, LogOut } from "lucide-react";
 import AnnouncementsList from "../../../components/AnnouncementsList";
 
 export default function ViewerDashboardClient() {
@@ -9,20 +8,17 @@ export default function ViewerDashboardClient() {
   const [officeFilter, setOfficeFilter] = useState("");
   const [offices, setOffices] = useState([]);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [search, setSearch] = useState("");
+  const [readFilter, setReadFilter] = useState("all");
   const [total, setTotal] = useState(0);
   const [modal, setModal] = useState({ type: null, data: null });
   const [user, setUser] = useState(null);
-  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-
-  const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/";
-  };
-  const [stats, setStats] = useState({ total: 0 });
+  const [stats, setStats] = useState({ total: 0, unread: 0 });
 
   useEffect(() => {
     loadAgendas();
-  }, [officeFilter, page]);
+  }, [officeFilter, page, pageSize, search, readFilter]);
 
   useEffect(() => {
     fetch("/api/admin/offices", { credentials: "include" })
@@ -32,28 +28,36 @@ export default function ViewerDashboardClient() {
       })
       .then(setOffices)
       .catch(() => setOffices([]));
-
-    // Fetch user data
-    fetch("/api/auth/session", { credentials: "include" })
-      .then((res) => res.json())
-      .then((userData) => setUser(userData))
-      .catch((err) => console.error("Failed to fetch user:", err));
   }, []);
 
   async function loadAgendas() {
     const params = new URLSearchParams();
     params.set("status", "APPROVED");
     if (officeFilter) params.set("officeId", officeFilter);
+    if (search) params.set("search", search);
     params.set("page", page);
-    params.set("pageSize", 20);
+    params.set("pageSize", pageSize);
 
     const res = await fetch(`/api/admin/agendas?${params.toString()}`, {
       credentials: "include",
     });
     const data = await res.json();
-    setAgendas(data.agendas || []);
+    const retrieved = data.agendas || [];
+
+    const readList = JSON.parse(localStorage.getItem("viewer_read_messages") || "[]");
+    const unreadCount = retrieved.filter((item) => !readList.includes(item.id)).length;
+
+    let filtered = retrieved;
+    if (readFilter !== "all") {
+      filtered = retrieved.filter((item) => {
+        const isReadMsg = readList.includes(item.id);
+        return readFilter === "read" ? isReadMsg : !isReadMsg;
+      });
+    }
+
+    setAgendas(filtered);
     setTotal(data.total || 0);
-    setStats({ total: data.total || 0 });
+    setStats({ total: data.total || 0, unread: unreadCount });
   }
 
   function statusBadge(status) {
@@ -84,80 +88,43 @@ export default function ViewerDashboardClient() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50 p-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Welcome{user?.name ? `, ${user.name}` : ""} 👋</h1>
-          <p className="text-gray-600 mt-1">View approved communications from across offices.</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="relative text-gray-500 hover:text-gray-700">
-            <Bell className="w-6 h-6" />
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-              3
-            </span>
-          </button>
-
-          <div className="relative">
-            <button
-              onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-              className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
-            >
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                {user?.name ? user.name.charAt(0).toUpperCase() : "V"}
-              </div>
-              <ChevronDown className="w-4 h-4" />
-            </button>
-
-            {profileDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
-                <div className="px-4 py-2 border-b border-gray-200">
-                  <div className="font-semibold">{user?.name || "Viewer User"}</div>
-                  <div className="text-sm text-gray-500">{user?.role || "Viewer"}</div>
-                </div>
-                <button className="flex items-center gap-2 w-full px-4 py-2 text-left text-gray-700 hover:bg-gray-100">
-                  <User className="w-4 h-4" />
-                  Profile
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-2 w-full px-4 py-2 text-left text-gray-700 hover:bg-red-50 hover:text-red-600"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Logout
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-          <p className="text-sm font-medium text-gray-600">Total Approved</p>
-          <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50 p-4 sm:p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-5 border-l-4 border-blue-500">
+          <p className="text-xs sm:text-sm font-semibold uppercase text-gray-500">Total Approved</p>
+          <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.total}</p>
           <p className="text-xs text-gray-500 mt-1">Communications you can view</p>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-500">
-          <p className="text-sm font-medium text-gray-600">Current Filter</p>
-          <p className="text-3xl font-bold text-gray-900">{officeFilter ? offices.find((o) => o.id === officeFilter)?.name || "Office" : "All Offices"}</p>
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-5 border-l-4 border-indigo-500">
+          <p className="text-xs sm:text-sm font-semibold uppercase text-gray-500">Current Filter</p>
+          <p className="text-2xl sm:text-3xl font-bold text-gray-900">{officeFilter ? offices.find((o) => o.id === officeFilter)?.name || "Office" : "All Offices"}</p>
           <p className="text-xs text-gray-500 mt-1">Filtering approved items only</p>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-          <p className="text-sm font-medium text-gray-600">Pages</p>
-          <p className="text-3xl font-bold text-gray-900">{Math.ceil(total / 20) || 1}</p>
-          <p className="text-xs text-gray-500 mt-1">Page size: 20</p>
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-5 border-l-4 border-green-500">
+          <p className="text-xs sm:text-sm font-semibold uppercase text-gray-500">Unread</p>
+          <p className="text-2xl sm:text-3xl font-bold text-gray-900">{stats.unread}</p>
+          <p className="text-xs text-gray-500 mt-1">Unread approved items</p>
         </div>
-        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
-          <p className="text-sm font-medium text-gray-600">Office Count</p>
-          <p className="text-3xl font-bold text-gray-900">{offices.length}</p>
-          <p className="text-xs text-gray-500 mt-1">Available offices</p>
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-5 border-l-4 border-yellow-500">
+          <p className="text-xs sm:text-sm font-semibold uppercase text-gray-500">Page Count</p>
+          <p className="text-2xl sm:text-3xl font-bold text-gray-900">{Math.max(1, Math.ceil(total / pageSize))}</p>
+          <p className="text-xs text-gray-500 mt-1">Page size: {pageSize}</p>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium text-gray-700">Filter by office:</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Search title or description"
+            className="border border-gray-300 rounded-lg px-3 py-2 w-60"
+          />
+
           <select
             value={officeFilter}
             onChange={(e) => {
@@ -171,112 +138,120 @@ export default function ViewerDashboardClient() {
               <option key={o.id} value={o.id}>{o.name}</option>
             ))}
           </select>
+
+          <select
+            value={readFilter}
+            onChange={(e) => {
+              setReadFilter(e.target.value);
+              setPage(1);
+            }}
+            className="border border-gray-300 rounded-lg px-3 py-2 bg-white"
+          >
+            <option value="all">All</option>
+            <option value="unread">Unread</option>
+            <option value="read">Read</option>
+          </select>
+
+          <select
+            value={pageSize}
+            onChange={(e) => {
+              setPageSize(Number(e.target.value));
+              setPage(1);
+            }}
+            className="border border-gray-300 rounded-lg px-3 py-2 bg-white"
+          >
+            {[10, 20, 50, 100].map((size) => (
+              <option key={size} value={size}>{size} / page</option>
+            ))}
+          </select>
         </div>
 
         <div className="text-sm text-gray-600">
-          Showing {agendas.length} item{agendas.length === 1 ? "" : "s"}
+          Showing {agendas.length} item{agendas.length === 1 ? "" : "s"} (total {total})
         </div>
       </div>
 
-      <table className="w-full border rounded-lg bg-arsiLight shadow">
-        <thead className="bg-arsiLight text-left">
-          <tr>
-            <th className="p-3">ID</th>
-            <th className="p-3">Title</th>
-            <th className="p-3">Sender</th>
-            <th className="p-3">Receiver</th>
-            <th className="p-3">Current Office</th>
-            <th className="p-3">Created By</th>
-            <th className="p-3">Status</th>
-            <th className="p-3">Created At</th>
-            <th className="p-3">Attachment</th>
-            <th className="p-3">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {agendas.map((agenda) => {
-            const attachmentUrl = agenda.attachmentUrl || agenda.attachment;
-            return (
-              <tr key={agenda.id} className="border-t">
-                <td className="p-3 text-sm">{agenda.id}</td>
-                <td className="p-3">{agenda.title}</td>
-                <td className="p-3">{agenda.senderOffice?.name || "-"}</td>
-                <td className="p-3">{agenda.receiverOffice?.name || "-"}</td>
-                <td className="p-3">{agenda.currentOffice?.name || "-"}</td>
-                <td className="p-3">{agenda.createdBy?.name}</td>
-                <td className="p-3">
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${statusBadge(
-                      agenda.status
-                    )}`}
-                  >
-                    {agenda.status}
-                  </span>
-                </td>
-                <td className="p-3">{new Date(agenda.createdAt).toLocaleDateString()}</td>
-                <td className="p-3">
-                  {attachmentUrl ? (
-                    <div className="space-x-2">
-                      <a
-                        href={attachmentUrl}
-                        className="text-arsiBlue underline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        Download
-                      </a>
-                      {attachmentUrl.toLowerCase().endsWith('.pdf') && (
-                        <button
-                          onClick={() => openPdfPreview(attachmentUrl)}
-                          className="text-arsiBlue underline"
-                        >
-                          Preview
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    "-"
-                  )}
-                </td>
-                <td className="p-3 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => openModal("timeline", agenda.id)}
-                    className="px-3 py-1 bg-gray-200 rounded"
-                  >
-                    Timeline
-                  </button>
-                  <button
-                    onClick={() => openModal("routing", agenda.id)}
-                    className="px-3 py-1 bg-gray-200 rounded"
-                  >
-                    Routing
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      <div className="overflow-x-auto rounded-lg border bg-arsiLight shadow">
+        <table className="min-w-full border-collapse">
+          <thead className="bg-arsiLight text-left">
+            <tr>
+              <th className="p-3 text-xs sm:text-sm">ID</th>
+              <th className="p-3 text-xs sm:text-sm">Title</th>
+              <th className="p-3 text-xs sm:text-sm">Sender</th>
+              <th className="p-3 text-xs sm:text-sm">Receiver</th>
+              <th className="p-3 text-xs sm:text-sm">Office</th>
+              <th className="p-3 text-xs sm:text-sm">Status</th>
+              <th className="p-3 text-xs sm:text-sm">Date</th>
+              <th className="p-3 text-xs sm:text-sm">Attachment</th>
+              <th className="p-3 text-xs sm:text-sm">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {agendas.map((agenda) => {
+              const attachmentUrl = agenda.attachmentUrl || agenda.attachment;
+              return (
+                <tr key={agenda.id} className="border-t bg-white hover:bg-gray-50">
+                  <td className="p-2 sm:p-3 text-xs sm:text-sm truncate max-w-[120px]">{agenda.id}</td>
+                  <td className="p-2 sm:p-3 text-xs sm:text-sm font-medium truncate max-w-[180px]">{agenda.title}</td>
+                  <td className="p-2 sm:p-3 text-xs sm:text-sm">{agenda.senderOffice?.name || "-"}</td>
+                  <td className="p-2 sm:p-3 text-xs sm:text-sm">{agenda.receiverOffice?.name || "-"}</td>
+                  <td className="p-2 sm:p-3 text-xs sm:text-sm">{agenda.currentOffice?.name || "-"}</td>
+                  <td className="p-2 sm:p-3 text-xs sm:text-sm">
+                    <span className={`px-2 py-1 rounded-full ${statusBadge(agenda.status)}`}>{agenda.status}</span>
+                  </td>
+                  <td className="p-2 sm:p-3 text-xs sm:text-sm">{new Date(agenda.createdAt).toLocaleDateString()}</td>
+                  <td className="p-2 sm:p-3 text-xs sm:text-sm">
+                    {attachmentUrl ? (
+                      <div className="flex flex-wrap gap-1">
+                        <a href={attachmentUrl} className="text-arsiBlue underline" target="_blank" rel="noopener noreferrer">
+                          Download
+                        </a>
+                        {attachmentUrl.toLowerCase().endsWith('.pdf') && (
+                          <button onClick={() => openPdfPreview(attachmentUrl)} className="text-arsiBlue underline">
+                            Preview
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td className="p-2 sm:p-3 text-xs sm:text-sm flex flex-wrap gap-1">
+                    <button onClick={() => openModal("timeline", agenda.id)} className="px-2 py-1 text-xs rounded bg-gray-200">
+                      Timeline
+                    </button>
+                    <button onClick={() => openModal("routing", agenda.id)} className="px-2 py-1 text-xs rounded bg-gray-200">
+                      Routing
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
 
       {total > agendas.length && (
-        <div className="mt-4 flex justify-between">
-          <button
-            disabled={page === 1}
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span>
-            Page {page} of {Math.ceil(total / 20)}
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              disabled={page * pageSize >= total}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+          <span className="text-sm text-gray-600">
+            Page {page} of {Math.max(1, Math.ceil(total / pageSize))}
           </span>
-          <button
-            disabled={page * 20 >= total}
-            onClick={() => setPage((p) => p + 1)}
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
         </div>
       )}
 

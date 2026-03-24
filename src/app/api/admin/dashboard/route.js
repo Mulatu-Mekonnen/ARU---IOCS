@@ -21,6 +21,9 @@ export async function GET() {
     const rejectedAgendas = await prisma.agenda.count({
       where: { status: "REJECTED" },
     });
+    const forwardedAgendas = await prisma.agenda.count({
+      where: { status: "FORWARDED" },
+    });
 
     const statusGroups = await prisma.agenda.groupBy({
       by: ["status"],
@@ -54,6 +57,87 @@ export async function GET() {
       // If column doesn't exist, leave officeGroups empty
     }
 
+    // Recent activities
+    const recentActivities = await Promise.all([
+      // Recent agenda creations
+      prisma.agenda.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          createdBy: { select: { name: true } },
+          senderOffice: { select: { name: true } },
+        },
+      }),
+      // Recent approval history
+      prisma.approvalHistory.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          actionBy: { select: { name: true } },
+          agenda: {
+            select: {
+              id: true,
+              title: true,
+              status: true,
+            },
+          },
+        },
+      }),
+      // Recent user registrations
+      prisma.user.findMany({
+        take: 3,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          name: true,
+          role: true,
+          createdAt: true,
+        },
+      }),
+      // Recent announcements
+      prisma.announcement.findMany({
+        take: 3,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: { select: { name: true } },
+        },
+      }),
+    ]);
+
+    // Combine and sort all activities
+    const allActivities = [
+      ...recentActivities[0].map(item => ({
+        type: 'agenda_created',
+        id: item.id,
+        title: `New agenda: "${item.title}"`,
+        description: `Created by ${item.createdBy?.name || 'Unknown'} from ${item.senderOffice?.name || 'Unknown office'}`,
+        timestamp: item.createdAt,
+        status: item.status,
+      })),
+      ...recentActivities[1].map(item => ({
+        type: 'agenda_action',
+        id: item.id,
+        title: `Agenda ${item.action.toLowerCase()}: "${item.agenda?.title || 'Unknown'}"`,
+        description: `By ${item.actionBy?.name || 'Unknown'}`,
+        timestamp: item.createdAt,
+        action: item.action,
+      })),
+      ...recentActivities[2].map(item => ({
+        type: 'user_registered',
+        id: item.id,
+        title: `New user: ${item.name}`,
+        description: `Role: ${item.role}`,
+        timestamp: item.createdAt,
+      })),
+      ...recentActivities[3].map(item => ({
+        type: 'announcement',
+        id: item.id,
+        title: `Announcement: "${item.title}"`,
+        description: `By ${item.author?.name || 'Unknown'}`,
+        timestamp: item.createdAt,
+      })),
+    ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)).slice(0, 10);
+
     return NextResponse.json({
       totalUsers,
       totalOffices,
@@ -61,8 +145,10 @@ export async function GET() {
       pendingAgendas,
       approvedAgendas,
       rejectedAgendas,
+      forwardedAgendas,
       statusGroups,
       officeGroups,
+      recentActivities: allActivities,
     });
   } catch (err) {
     console.error(err);

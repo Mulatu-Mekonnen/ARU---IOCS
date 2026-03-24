@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 
 export default function StaffCreateClient() {
   const [title, setTitle] = useState("");
+  const [agendas, setAgendas] = useState([]);
   const [description, setDescription] = useState("");
   const [receiverOffice, setReceiverOffice] = useState("");
   const [offices, setOffices] = useState([]);
   const [attachment, setAttachment] = useState(null);
+  const [uploadError, setUploadError] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,39 +75,115 @@ export default function StaffCreateClient() {
       setIsSubmitting(false);
     }
   };
+    const createAgenda = async (e) => {
+    e.preventDefault();
+    setUploadError("");
+
+    const res = await fetch("/api/admin/agendas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, description, receiverOfficeId: receiverOffice }),
+    });
+
+    const agenda = await res.json();
+    if (!res.ok) {
+      setUploadError(agenda.error || "Failed to create agenda");
+      return;
+    }
+
+    // If a file was selected, upload it and link to the agenda
+    if (attachment) {
+      const formData = new FormData();
+      formData.append("agendaId", agenda.id);
+      formData.append("file", attachment);
+
+      const uploadRes = await fetch("/api/agendas/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        const err = await uploadRes.json();
+        setUploadError(err.error || "Failed to upload attachment");
+      }
+    }
+
+    setTitle("");
+    setDescription("");
+    setReceiverOffice("");
+    setAttachment(null);
+    loadAgendas();
+  };
 
   return (
-    <div className="p-6 bg-white rounded-xl shadow-sm border border-gray-200">
-      <h1 className="text-2xl font-bold mb-4">Create Communication</h1>
-      {error && <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded">{error}</div>}
-      {success && <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded">{success}</div>}
+    <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">Create New Communication</h2>
+        <form onSubmit={createAgenda} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Enter communication title"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              required
+            />
+          </div>
 
-      <form onSubmit={submit} className="grid grid-cols-1 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full border border-gray-300 rounded p-2" placeholder="Title" required />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="w-full border border-gray-300 rounded p-2" rows={4} placeholder="Description" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Receiver Office *</label>
-          <select value={receiverOffice} onChange={(e) => setReceiverOffice(e.target.value)} className="w-full border border-gray-300 rounded p-2" required>
-            <option value="">Select office</option>
-            {offices.map((office) => (
-              <option key={office.id} value={office.id}>{office.name}</option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Attachment (Optional)</label>
-          <input type="file" onChange={(e) => setAttachment(e.target.files?.[0] || null)} className="w-full" />
-        </div>
-        <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition disabled:opacity-70">
-          {isSubmitting ? "Sending..." : "Send Communication"}
-        </button>
-      </form>
-    </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter detailed description"
+              rows={4}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Receiver Office</label>
+            <select
+              value={receiverOffice}
+              onChange={(e) => setReceiverOffice(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+              required
+            >
+              <option value="">Choose office</option>
+              {offices.map((o) => (
+                <option key={o.id} value={o.id}>{o.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Attachment (Optional)</label>
+            <input
+              type="file"
+              accept=".pdf,.docx,.doc"
+              onChange={(e) => setAttachment(e.target.files?.[0] || null)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            />
+            {attachment && (
+              <p className="mt-2 text-sm text-gray-600">Selected: {attachment.name}</p>
+            )}
+          </div>
+
+          {uploadError && (
+            <div className="md:col-span-2 p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-700 text-sm">
+              {uploadError}
+            </div>
+          )}
+
+          <div className="md:col-span-2">
+            <button
+              type="submit"
+              className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium"
+            >
+              Send Communication
+            </button>
+          </div>
+        </form>
+      </div>
   );
 }

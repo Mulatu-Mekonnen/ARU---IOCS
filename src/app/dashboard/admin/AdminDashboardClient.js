@@ -12,6 +12,7 @@ import {
   XCircle,
   Megaphone,
   FileText,
+  ForwardIcon,
   Settings
 } from "lucide-react";
 
@@ -113,6 +114,13 @@ export default function AdminDashboardClient() {
           href="/dashboard/admin/agendas?status=rejected"
           color="red"
         />
+        <StatCard
+          title="Forwarded"
+          value={data.forwardedAgendas || 0}
+          icon={ForwardIcon}
+          href="/dashboard/admin/agendas?status=forwarded"
+          color="gray"
+        />
       </div>
 
       {/* Quick Access Actions */}
@@ -174,7 +182,9 @@ export default function AdminDashboardClient() {
                 <div className="flex items-center gap-3">
                   <div className={`w-3 h-3 rounded-full ${
                     g.status === 'PENDING' ? 'bg-yellow-400' :
-                    g.status === 'APPROVED' ? 'bg-green-400' : 'bg-red-400'
+                    g.status === 'APPROVED' ? 'bg-green-400' :
+                    g.status === 'REJECTED' ? 'bg-red-400' :
+                    g.status === 'FORWARDED' ? 'bg-blue-400' : 'bg-gray-400'
                   }`}></div>
                   <span className="font-medium text-gray-900 capitalize">
                     {g.status.toLowerCase()}
@@ -202,6 +212,83 @@ export default function AdminDashboardClient() {
           </div>
         </div>
       </div>
+
+      {/* Recent Activity Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Recent Activity</h2>
+        <div className="space-y-4">
+          {(data.recentActivities || []).map((activity, index) => {
+            const getActivityLink = () => {
+              if (activity.type === 'agenda_created' || activity.type === 'agenda_action') {
+                return `/dashboard/admin/agendas`;
+              }
+              if (activity.type === 'user_registered') {
+                return `/dashboard/admin/users`;
+              }
+              if (activity.type === 'announcement') {
+                return `/dashboard/admin/announcements`;
+              }
+              return null;
+            };
+
+            const link = getActivityLink();
+
+            return (
+              <div key={`${activity.type}-${activity.id}-${index}`} className={`flex items-start gap-4 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors ${link ? 'cursor-pointer' : ''}`}>
+                {link ? (
+                  <Link href={link} className="flex items-start gap-4 flex-1">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      activity.type === 'agenda_created' ? 'bg-blue-100 text-blue-600' :
+                      activity.type === 'agenda_action' ? 'bg-green-100 text-green-600' :
+                      activity.type === 'user_registered' ? 'bg-purple-100 text-purple-600' :
+                      'bg-orange-100 text-orange-600'
+                    }`}>
+                      {activity.type === 'agenda_created' && <Calendar className="w-5 h-5" />}
+                      {activity.type === 'agenda_action' && <CheckCircle className="w-5 h-5" />}
+                      {activity.type === 'user_registered' && <Users className="w-5 h-5" />}
+                      {activity.type === 'announcement' && <Megaphone className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                      <p className="text-sm text-gray-600">{activity.description}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(activity.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </Link>
+                ) : (
+                  <>
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      activity.type === 'agenda_created' ? 'bg-blue-100 text-blue-600' :
+                      activity.type === 'agenda_action' ? 'bg-green-100 text-green-600' :
+                      activity.type === 'user_registered' ? 'bg-purple-100 text-purple-600' :
+                      'bg-orange-100 text-orange-600'
+                    }`}>
+                      {activity.type === 'agenda_created' && <Calendar className="w-5 h-5" />}
+                      {activity.type === 'agenda_action' && <CheckCircle className="w-5 h-5" />}
+                      {activity.type === 'user_registered' && <Users className="w-5 h-5" />}
+                      {activity.type === 'announcement' && <Megaphone className="w-5 h-5" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">{activity.title}</p>
+                      <p className="text-sm text-gray-600">{activity.description}</p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(activity.timestamp).toLocaleString()}
+                      </p>
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })}
+          {(data.recentActivities || []).length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No recent activity</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -213,6 +300,7 @@ function StatCard({ title, value, icon: Icon, color }) {
     purple: "bg-purple-50 border-purple-200 text-purple-600",
     yellow: "bg-yellow-50 border-yellow-200 text-yellow-600",
     red: "bg-red-50 border-red-200 text-red-600",
+    gray: "bg-gray-50 border-gray-200 text-gray-600",
   };
 
   return (

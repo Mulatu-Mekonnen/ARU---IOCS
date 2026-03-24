@@ -17,7 +17,7 @@ export default function LoginPage() {
 
   const demoAccounts = [
     { role: 'Admin', email: 'admin@office.com', password: 'admin123', color: 'from-red-500 to-pink-500' },
-    { role: 'Head', email: 'gute@g', password: '1234', color: 'from-blue-500 to-purple-500' },
+    { role: 'Head', email: 'muler@g', password: '1234', color: 'from-blue-500 to-purple-500' },
     { role: 'Staff', email: 'staff@office.com', password: 'user123', color: 'from-green-500 to-teal-500' },
     { role: 'Viewer', email: 'namste@G', password: '1234', color: 'from-yellow-500 to-orange-500' },
   ];

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Bell, ChevronDown, User, LogOut } from "lucide-react";
 import AnnouncementsList from "../../../components/AnnouncementsList";
 
@@ -20,6 +21,7 @@ export default function StaffDashboardClient() {
     pending: 0,
     approved: 0,
     rejected: 0,
+    forwarded: 0,
   });
   const [user, setUser] = useState(null);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -37,6 +39,8 @@ export default function StaffDashboardClient() {
     setModal({ type: null, data: null });
   }
 
+  const router = useRouter();
+
   useEffect(() => {
     loadAgendas();
     loadStats();
@@ -53,6 +57,7 @@ export default function StaffDashboardClient() {
         pending: userAgendas.filter(a => a.status === "PENDING").length,
         approved: userAgendas.filter(a => a.status === "APPROVED").length,
         rejected: userAgendas.filter(a => a.status === "REJECTED").length,
+        forwarded: userAgendas.filter(a => a.status === "FORWARDED").length,
       });
     } catch (err) {
       console.error("Failed to load stats:", err);
@@ -202,6 +207,20 @@ export default function StaffDashboardClient() {
           </div>
         </div>
 
+        <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-indigo-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Forwarded</p>
+              <p className="text-3xl font-bold text-gray-800">{stats.forwarded}</p>
+            </div>
+            <div className="bg-indigo-100 p-3 rounded-full">
+              <svg className="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6h4m-2-2v4m-4 8h4m-2 2v-4M7 13l3 3 7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
         <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-red-500">
           <div className="flex items-center justify-between">
             <div>
@@ -222,7 +241,7 @@ export default function StaffDashboardClient() {
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Quick Actions</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <button
-            onClick={() => setTitle("Letter")}
+            onClick={() => router.push("/dashboard/staff/create")}
             className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -232,7 +251,7 @@ export default function StaffDashboardClient() {
           </button>
 
           <button
-            onClick={() => setTitle("Memo")}
+            onClick={() => router.push("/dashboard/staff/create")}
             className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,7 +261,7 @@ export default function StaffDashboardClient() {
           </button>
 
           <button
-            onClick={() => setTitle("Announcement")}
+            onClick={() => router.push("/dashboard/staff/create")}
             className="flex items-center justify-center gap-3 p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-1"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -251,77 +270,6 @@ export default function StaffDashboardClient() {
             Create Announcement
           </button>
         </div>
-      </div>
-
-      {/* Create New Communication Form */}
-      <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">Create New Communication</h2>
-        <form onSubmit={createAgenda} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Title</label>
-            <input
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter communication title"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              required
-            />
-          </div>
-
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter detailed description"
-              rows={4}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Receiver Office</label>
-            <select
-              value={receiverOffice}
-              onChange={(e) => setReceiverOffice(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              required
-            >
-              <option value="">Choose office</option>
-              {offices.map((o) => (
-                <option key={o.id} value={o.id}>{o.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Attachment (Optional)</label>
-            <input
-              type="file"
-              accept=".pdf,.docx,.doc"
-              onChange={(e) => setAttachment(e.target.files?.[0] || null)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-            {attachment && (
-              <p className="mt-2 text-sm text-gray-600">Selected: {attachment.name}</p>
-            )}
-          </div>
-
-          {uploadError && (
-            <div className="md:col-span-2 p-3 bg-red-50 border-l-4 border-red-500 rounded-r-lg text-red-700 text-sm">
-              {uploadError}
-            </div>
-          )}
-
-          <div className="md:col-span-2">
-            <button
-              type="submit"
-              className="w-full md:w-auto px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium"
-            >
-              Send Communication
-            </button>
-          </div>
-        </form>
       </div>
 
       {/* Communications Table */}
