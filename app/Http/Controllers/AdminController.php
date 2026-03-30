@@ -27,7 +27,7 @@ class AdminController extends Controller
             'totalOffices' => Office::count(),
         ];
 
-        return Inertia::render('Admin/Dashboard', [
+        return Inertia::render('Dashboard/Admin/Dashboard', [
             'stats' => $stats,
             'auth' => [
                 'user' => $request->user(),

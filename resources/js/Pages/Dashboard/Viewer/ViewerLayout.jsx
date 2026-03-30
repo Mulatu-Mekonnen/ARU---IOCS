@@ -1,4 +1,5 @@
-import { Link, usePage } from '@inertiajs/react';
+import React from 'react';
+import { Link, usePage, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
@@ -30,7 +31,7 @@ export default function ViewerLayout({ children }) {
   ];
 
   const handleLogout = () => {
-    window.location.href = '/logout';
+    router.post('/logout');
   };
 
   return (

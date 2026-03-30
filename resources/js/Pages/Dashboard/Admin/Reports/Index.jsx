@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import AdminLayout from '../AdminLayout';
 import { BarChart, Download, PieChart } from "lucide-react";

@@ -7,6 +7,7 @@ use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Models\Office;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserSeeder extends Seeder
 {
@@ -19,6 +20,7 @@ class UserSeeder extends Seeder
 
         // Admin user
         User::create([
+            'id' => Str::uuid(),
             'name' => 'Admin User',
             'email' => 'admin@office.com',
             'password' => Hash::make('admin123'),
@@ -28,6 +30,7 @@ class UserSeeder extends Seeder
 
         // Head user
         User::create([
+            'id' => Str::uuid(),
             'name' => 'Head User',
             'email' => 'muler@g',
             'password' => Hash::make('1234'),
@@ -38,6 +41,7 @@ class UserSeeder extends Seeder
 
         // Staff user
         User::create([
+            'id' => Str::uuid(),
             'name' => 'Staff User',
             'email' => 'staff@office.com',
             'password' => Hash::make('user123'),
@@ -48,6 +52,7 @@ class UserSeeder extends Seeder
 
         // Viewer user
         User::create([
+            'id' => Str::uuid(),
             'name' => 'Viewer User',
             'email' => 'namste@G',
             'password' => Hash::make('1234'),

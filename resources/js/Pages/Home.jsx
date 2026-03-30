@@ -1,3 +1,4 @@
+import React from 'react';
 import { Link } from '@inertiajs/react';
 import { Users, FileText, CheckCircle, Building, TrendingUp, Shield, Clock, ArrowRight } from 'lucide-react';
 

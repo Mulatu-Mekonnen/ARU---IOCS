@@ -26,13 +26,24 @@ class AuthController extends Controller
 
         if ($user && Hash::check($request->password, $user->password)) {
             Auth::login($user);
+            $request->session()->regenerate();
 
-            return match ($user->role) {
-                'ADMIN' => redirect('/dashboard/admin'),
-                'HEAD' => redirect('/dashboard/head'),
-                'VIEWER' => redirect('/dashboard/viewer'),
-                default => redirect('/dashboard/staff'),
+            // Debug: Log authentication success
+            \Log::info('User logged in: ' . $user->email . ' with role: ' . $user->role . ' and session=' . $request->session()->getId());
+            \Log::info('Post-login Auth check: ' . (Auth::check() ? 'true' : 'false'));
+
+            $dashboardUrl = match ($user->role) {
+                'ADMIN' => '/dashboard/admin',
+                'HEAD' => '/dashboard/head',
+                'VIEWER' => '/dashboard/viewer',
+                default => '/dashboard/staff',
             };
+
+            if ($request->header('X-Inertia')) {
+                return Inertia::location($dashboardUrl);
+            }
+
+            return redirect()->intended($dashboardUrl);
         }
 
         return back()->withErrors(['email' => 'Invalid credentials']);

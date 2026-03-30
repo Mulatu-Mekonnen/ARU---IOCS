@@ -1,3 +1,4 @@
+import React from 'react';
 import { useMemo } from 'react';
 import HeadLayout from '../HeadLayout';
 import { BarChart3, Clock, CheckCircle, XCircle, ArrowRight, FileText } from 'lucide-react';

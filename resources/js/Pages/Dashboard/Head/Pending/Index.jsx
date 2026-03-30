@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState, useMemo } from 'react';
 import HeadLayout from '../HeadLayout';
 import { Eye, Check, X, ArrowRight } from 'lucide-react';

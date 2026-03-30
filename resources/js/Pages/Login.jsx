@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { Link, useForm } from '@inertiajs/react';
+import React, { useState } from 'react';
+import { Head, Link, useForm } from '@inertiajs/react';
+import { Eye, EyeOff, User, Lock, Mail, Building2 } from 'lucide-react';
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
@@ -19,11 +20,9 @@ export default function Login() {
   ];
 
   const handleDemoLogin = (demoEmail, demoPassword) => {
-    setData({
-      email: demoEmail,
-      password: demoPassword,
-      remember: true,
-    });
+    setData('email', demoEmail);
+    setData('password', demoPassword);
+    setData('remember', true);
     post('/login');
   };
 
