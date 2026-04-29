@@ -64,9 +64,11 @@ export default function Inbox({ agendas = [] }) {
                   {messages.map((msg) => (
                     <tr key={msg.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{msg.title}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{msg.createdBy?.name || 'Unknown'}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {msg.senderOffice?.name || msg.receiverOffice?.name || '—'}
+                        {msg.createdBy?.name || msg.created_by?.name || msg.created_by_id || 'Unknown'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {msg.senderOffice?.name || msg.sender_office?.name || msg.sender_office_id || msg.receiverOffice?.name || msg.receiver_office?.name || msg.receiver_office_id || '—'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span
@@ -80,7 +82,7 @@ export default function Inbox({ agendas = [] }) {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                        {new Date(msg.createdAt).toLocaleString()}
+                        {new Date(msg.created_at || msg.createdAt).toLocaleString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm space-x-2">
                         <button
@@ -131,20 +133,22 @@ export default function Inbox({ agendas = [] }) {
               <div className="space-y-4 mb-6">
                 <div className="border-b pb-4">
                   <p className="text-sm text-gray-600 mb-1">From</p>
-                  <p className="text-gray-900 font-medium">{selected.createdBy?.name || 'Unknown'}</p>
+                  <p className="text-gray-900 font-medium">
+                    {selected.createdBy?.name || selected.created_by?.name || selected.created_by_id || 'Unknown'}
+                  </p>
                 </div>
 
                 <div className="border-b pb-4">
                   <p className="text-sm text-gray-600 mb-1">Office</p>
                   <p className="text-gray-900 font-medium">
-                    {selected.senderOffice?.name || selected.receiverOffice?.name || '—'}
+                    {selected.senderOffice?.name || selected.sender_office?.name || selected.sender_office_id || selected.receiverOffice?.name || selected.receiver_office?.name || selected.receiver_office_id || '—'}
                   </p>
                 </div>
 
                 <div className="border-b pb-4">
                   <p className="text-sm text-gray-600 mb-1">Date</p>
                   <p className="text-gray-900 font-medium">
-                    {new Date(selected.createdAt).toLocaleString()}
+                    {new Date(selected.created_at || selected.createdAt).toLocaleString()}
                   </p>
                 </div>
 

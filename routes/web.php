@@ -21,6 +21,10 @@ Route::get('/', [HomeController::class, 'index']);
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
+    Route::get('/forgot-password', [AuthController::class, 'showForgotPasswordForm'])->name('password.request');
+    Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->name('password.email');
+    Route::get('/reset-password/{token}', [AuthController::class, 'showResetPasswordForm'])->name('password.reset');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -45,6 +49,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/admin/reports', [ReportController::class, 'index'])->name('admin.reports.index');
     Route::get('/dashboard/admin/audit-logs', [AuditLogController::class, 'index'])->name('admin.audit-logs.index');
     Route::get('/dashboard/admin/notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
+    Route::post('/dashboard/notifications/read', [NotificationController::class, 'markRead'])->name('notifications.read');
+    Route::post('/dashboard/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.readAll');
     // API endpoint for frontend announcement components (Inertia/JS)
     Route::get('/api/announcements', [AnnouncementController::class, 'apiIndex'])->name('api.announcements');
     Route::get('/dashboard/admin/settings', [SettingsController::class, 'index'])->name('admin.settings.index');
@@ -56,6 +62,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/head/reports', [HeadController::class, 'reports'])->name('head.reports.index');
     Route::get('/dashboard/head/archive', [HeadController::class, 'archive'])->name('head.archive.index');
     Route::get('/dashboard/head/notifications', [HeadController::class, 'notifications'])->name('head.notifications.index');
+    Route::get('/dashboard/head/staff', [HeadController::class, 'staff'])->name('head.staff.index');
     Route::get('/dashboard/staff', [StaffController::class, 'dashboard']);
     Route::get('/dashboard/staff/agendas', [StaffController::class, 'agendas'])->name('staff.agendas.index');
     Route::get('/dashboard/staff/agendas/create', [AgendaController::class, 'create'])->name('staff.agendas.create');
@@ -68,4 +75,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard/viewer/inbox', [ViewerController::class, 'inbox'])->name('viewer.inbox.index');
     Route::get('/dashboard/viewer/archive', [ViewerController::class, 'archive'])->name('viewer.archive.index');
     Route::get('/dashboard/viewer/announcements', [ViewerController::class, 'announcements'])->name('viewer.announcements.index');
+    Route::get('/dashboard/viewer/notifications', [ViewerController::class, 'notifications'])->name('viewer.notifications.index');
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile.index');
+    Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
 });

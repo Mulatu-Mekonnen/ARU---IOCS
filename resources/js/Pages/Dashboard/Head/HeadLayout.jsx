@@ -31,6 +31,7 @@ export default function HeadLayout({ children }) {
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard/head", icon: LayoutDashboard },
+    { name: "Users", href: "/dashboard/head/staff", icon: Users },  
     { name: "Pending Approvals", href: "/dashboard/head/pending", icon: CheckCircle },
     { name: "My Agendas", href: "/dashboard/head/agendas", icon: Calendar },
     { name: "Archive", href: "/dashboard/head/archive", icon: Archive },
@@ -88,14 +89,17 @@ export default function HeadLayout({ children }) {
 
             <div className="flex items-center space-x-4 ml-auto">
               {/* Notifications */}
-              <button className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative">
+              <Link
+                href="/dashboard/head/notifications"
+                className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative"
+              >
                 <Bell className="w-5 h-5" />
                 {notificationStats.unread > 0 && (
                   <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
                     {notificationStats.unread}
                   </span>
                 )}
-              </button>
+              </Link>
 
               {/* Profile dropdown */}
               <div className="relative">

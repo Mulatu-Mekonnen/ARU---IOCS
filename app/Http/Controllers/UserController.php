@@ -104,4 +104,32 @@ class UserController extends Controller
 
         return redirect()->back()->with('success', 'User deleted successfully');
     }
+
+    public function profile(Request $request)
+    {
+        return Inertia::render('Profile/Index', [
+            'user' => $request->user()->load('office'),
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $user->id,
+            'password' => 'nullable|string|min:8',
+        ]);
+
+        if (!empty($validated['password'])) {
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
+
+        $user->update($validated);
+
+        return redirect()->back()->with('success', 'Profile updated successfully');
+    }
 }

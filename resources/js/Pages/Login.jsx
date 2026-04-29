@@ -8,6 +8,7 @@ export default function Login() {
   const [demoBusy, setDemoBusy] = useState(false);
   const page = usePage();
   const pageErrors = page.props.errors || {};
+  const statusMessage = page.props.flash?.status || null;
 
   const { data, setData, post, processing, errors } = useForm({
     email: '',
@@ -19,7 +20,7 @@ export default function Login() {
     { role: 'Admin', email: 'admin@office.com', password: 'admin123', color: 'from-red-500 to-pink-500' },
     { role: 'Head', email: 'muler@g', password: '1234', color: 'from-blue-500 to-purple-500' },
     { role: 'Staff', email: 'staff@office.com', password: 'user123', color: 'from-green-500 to-teal-500' },
-    { role: 'Viewer', email: 'namste@G', password: '1234', color: 'from-yellow-500 to-orange-500' },
+    { role: 'Viewer', email: 'namste@gmail.com', password: '12345678', color: 'from-yellow-500 to-orange-500' },
   ];
 
   const handleDemoLogin = (demoEmail, demoPassword) => {
@@ -85,6 +86,18 @@ export default function Login() {
             <p className="text-blue-600/80">Portal Login</p>
             <div className="w-24 h-1 bg-gradient-to-r from-blue-600 to-purple-500 mx-auto mt-3 rounded-full"></div>
           </div>
+
+          {/* Status message */}
+          {statusMessage && (
+            <div className="mb-4 p-3 bg-green-50 border-l-4 border-green-500 rounded-r-lg text-green-700 text-sm">
+              <div className="flex items-center">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M16.707 5.293a1 1 0 00-1.414 0L9 11.586 6.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l7-7a1 1 0 000-1.414z" />
+                </svg>
+                {statusMessage}
+              </div>
+            </div>
+          )}
 
           {/* Error message */}
           {emailErrorMessage && (

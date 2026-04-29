@@ -1,54 +1,45 @@
-import React from 'react';
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { router } from '@inertiajs/react';
 import HeadLayout from '../HeadLayout';
 import { Search, Filter, Eye, CheckCircle, XCircle, ArrowRight, Clock } from 'lucide-react';
 
 export default function Index({ agendas: initialAgendas, filters }) {
-  const [agendas, setAgendas] = useState(initialAgendas.data || initialAgendas);
   const [query, setQuery] = useState(filters?.search || "");
   const [statusFilter, setStatusFilter] = useState(filters?.status || "");
   const [dateFrom, setDateFrom] = useState(filters?.dateFrom || "");
   const [dateTo, setDateTo] = useState(filters?.dateTo || "");
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [selectedAgenda, setSelectedAgenda] = useState(null);
+  const [error, setError] = useState("");
 
-  async function loadAgendas() {
-    setLoading(true);
-    setError("");
-    try {
-      const params = new URLSearchParams();
-      params.set("page", page);
-      params.set("pageSize", 20);
+  useEffect(() => {
+    setQuery(filters?.search || "");
+    setStatusFilter(filters?.status || "");
+    setDateFrom(filters?.dateFrom || "");
+    setDateTo(filters?.dateTo || "");
+  }, [filters]);
 
-      if (statusFilter) {
-        params.set("status", statusFilter);
-      }
-
-      if (query) params.set("search", query);
-      if (dateFrom) params.set("dateFrom", dateFrom);
-      if (dateTo) params.set("dateTo", dateTo);
-
-      const res = await fetch(`/dashboard/head/archive?${params.toString()}`);
-      if (res.ok) {
-        const data = await res.json();
-        setAgendas(data.agendas || []);
-      } else {
-        setError("Failed to load communications");
-      }
-    } catch (err) {
-      setError(err.message || "Failed to load communications");
-    } finally {
-      setLoading(false);
-    }
-  }
+  const agendas = initialAgendas.data || [];
+  const currentPage = initialAgendas.current_page || 1;
+  const lastPage = initialAgendas.last_page || 1;
 
   function handleSearch(e) {
     e.preventDefault();
-    setPage(1);
-    loadAgendas();
+    setError("");
+    router.get(
+      '/dashboard/head/archive',
+      {
+        search: query,
+        status: statusFilter,
+        dateFrom,
+        dateTo,
+        page: 1,
+      },
+      {
+        preserveState: true,
+        replace: true,
+      }
+    );
   }
 
   function clearFilters() {
@@ -56,7 +47,32 @@ export default function Index({ agendas: initialAgendas, filters }) {
     setStatusFilter("");
     setDateFrom("");
     setDateTo("");
-    setPage(1);
+    setError("");
+    router.get(
+      '/dashboard/head/archive',
+      { page: 1 },
+      {
+        preserveState: true,
+        replace: true,
+      }
+    );
+  }
+
+  function changePage(page) {
+    router.get(
+      '/dashboard/head/archive',
+      {
+        search: query,
+        status: statusFilter,
+        dateFrom,
+        dateTo,
+        page,
+      },
+      {
+        preserveState: true,
+        replace: true,
+      }
+    );
   }
 
   function getStatusIcon(status) {
@@ -193,11 +209,7 @@ export default function Index({ agendas: initialAgendas, filters }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {loading ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-8 text-center text-gray-500">Loading...</td>
-                  </tr>
-                ) : agendas.length > 0 ? (
+                {agendas.length > 0 ? (
                   agendas.map((agenda) => (
                     <tr key={agenda.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4">
@@ -239,6 +251,25 @@ export default function Index({ agendas: initialAgendas, filters }) {
               </tbody>
             </table>
           </div>
+          {lastPage > 1 && (
+            <div className="flex items-center justify-between px-6 py-4 bg-white border-t border-gray-200">
+              <button
+                onClick={() => changePage(currentPage - 1)}
+                disabled={currentPage <= 1}
+                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-gray-600">Page {currentPage} of {lastPage}</span>
+              <button
+                onClick={() => changePage(currentPage + 1)}
+                disabled={currentPage >= lastPage}
+                className="px-4 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
       {selectedAgenda && (

@@ -214,6 +214,37 @@ class HeadController extends Controller
         ]);
     }
 
+    public function staff(Request $request)
+    {
+        $user = $request->user();
+        $office = $user->office;
+
+        $query = User::where('office_id', $office->id)->with('office');
+
+        if ($request->has('search') && $request->search) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->has('role') && $request->role) {
+            $query->where('role', $request->role);
+        }
+
+        if ($request->has('status') && $request->status) {
+            $query->where('active', $request->status === 'active');
+        }
+
+        $users = $query->orderBy('name')->paginate(20);
+
+        return Inertia::render('Dashboard/Head/Staff/Index', [
+            'users' => $users,
+            'filters' => $request->only(['search', 'role', 'status']),
+        ]);
+    }
+
     public function notifications(Request $request)
     {
         $user = $request->user();

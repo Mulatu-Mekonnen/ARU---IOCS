@@ -8,6 +8,8 @@ import {
   Edit,
   Trash2,
   Eye,
+  EyeOff,
+  Mail,
   Plus,
   ChevronLeft,
   ChevronRight,
@@ -26,6 +28,7 @@ export default function Index({ users, offices, filters }) {
   const [currentPage, setCurrentPage] = useState(users.current_page);
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const { data, setData, processing, errors, reset, post, put } = useForm({
     name: "",
@@ -38,6 +41,7 @@ export default function Index({ users, offices, filters }) {
 
   const handleEdit = (user) => {
     setEditing(user);
+    setShowPassword(false);
     setData({
       name: user.name,
       email: user.email,
@@ -121,6 +125,7 @@ export default function Index({ users, offices, filters }) {
               <button
                 onClick={() => {
                   setEditing(null);
+                  setShowPassword(false);
                   setShowForm(true);
                 }}
                 className="group flex items-center gap-2 bg-white text-blue-600 px-5 py-2.5 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-200"
@@ -407,6 +412,7 @@ export default function Index({ users, offices, filters }) {
                   <button
                     onClick={() => {
                       setShowForm(false);
+                      setShowPassword(false);
                       setEditing(null);
                       reset();
                     }}
@@ -430,27 +436,43 @@ export default function Index({ users, offices, filters }) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                  <input
-                    value={data.email}
-                    onChange={(e) => setData('email', e.target.value)}
-                    placeholder="Enter email address"
-                    type="email"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    required
-                  />
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <input
+                      value={data.email}
+                      onChange={(e) => setData('email', e.target.value)}
+                      placeholder="Enter email address"
+                      type="email"
+                      className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      required
+                    />
+                  </div>
                   {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
                 </div>
                 {!editing && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input
-                      value={data.password}
-                      onChange={(e) => setData('password', e.target.value)}
-                      placeholder="Enter password"
-                      type="password"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                    />
+                    <div className="relative">
+                      <input
+                        value={data.password}
+                        onChange={(e) => setData('password', e.target.value)}
+                        placeholder="Enter password"
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-blue-600"
+                      >
+                        {showPassword ? (
+                          <EyeOff className="w-5 h-5" />
+                        ) : (
+                          <Eye className="w-5 h-5" />
+                        )}
+                      </button>
+                    </div>
                     {errors.password && <p className="text-red-500 text-xs mt-1">{errors.password}</p>}
                   </div>
                 )}

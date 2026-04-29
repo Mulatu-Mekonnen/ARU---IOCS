@@ -85,14 +85,17 @@ export default function StaffLayout({ children }) {
 
             <div className="flex items-center space-x-4 ml-auto">
               {/* Notifications */}
-              <button className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative">
-                <Bell className="w-5 h-5" />
-                {notificationStats.unread > 0 && (
-                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
-                    {notificationStats.unread}
-                  </span>
-                )}
-              </button>
+                     <Link
+                              href="/dashboard/staff/notifications"
+                              className="p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 relative"
+                            >
+                              <Bell className="w-5 h-5" />
+                              {notificationStats.unread > 0 && (
+                                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 -translate-y-1/2 bg-red-500 rounded-full">
+                                  {notificationStats.unread}
+                                </span>
+                              )}
+                </Link>
 
               {/* Profile dropdown */}
               <div className="relative">

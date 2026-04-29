@@ -120,13 +120,7 @@ export default function Dashboard({ stats, auth, announcements = [] }) {
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-6">Quick Actions</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <QuickActionButton
-              title="New Agenda"
-              icon={Plus}
-              color="purple"
-              href="/dashboard/head/agendas/create"
-              action="create"
-            />
+            
             <QuickActionButton
               title="View Agendas"
               icon={Calendar}

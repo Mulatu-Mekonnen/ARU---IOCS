@@ -19,14 +19,13 @@ class ViewerController extends Controller
     public function dashboard(Request $request)
     {
         $user = $request->user();
-        $office = $user->office;
 
         $stats = [
-            'totalAgendas' => Agenda::where('current_office_id', $office->id)->count(),
-            'pendingAgendas' => Agenda::where('current_office_id', $office->id)->where('status', 'PENDING')->count(),
-            'approvedAgendas' => Agenda::where('current_office_id', $office->id)->where('status', 'APPROVED')->count(),
-            'rejectedAgendas' => Agenda::where('current_office_id', $office->id)->where('status', 'REJECTED')->count(),
-            'forwardedAgendas' => Agenda::where('current_office_id', $office->id)->where('status', 'FORWARDED')->count(),
+            'totalAgendas' => Agenda::count(),
+            'pendingAgendas' => Agenda::where('status', 'PENDING')->count(),
+            'approvedAgendas' => Agenda::where('status', 'APPROVED')->count(),
+            'rejectedAgendas' => Agenda::where('status', 'REJECTED')->count(),
+            'forwardedAgendas' => Agenda::where('status', 'FORWARDED')->count(),
         ];
 
         $announcements = Announcement::with('author')
@@ -45,17 +44,56 @@ class ViewerController extends Controller
 
     public function inbox(Request $request)
     {
-        $user = $request->user();
-        $office = $user->office;
-
-        $agendas = Agenda::where('current_office_id', $office->id)
-            ->where('status', 'APPROVED')
+        $agendas = Agenda::where('status', 'APPROVED')
             ->with(['createdBy', 'senderOffice', 'receiverOffice'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         return Inertia::render('Dashboard/Viewer/Inbox/Index', [
             'agendas' => $agendas,
+            'auth' => [
+                'user' => $request->user(),
+            ],
+        ]);
+    }
+
+    public function notifications(Request $request)
+    {
+        $notifications = [
+            [
+                'id' => '1',
+                'type' => 'new_communication',
+                'title' => 'New Agenda Received',
+                'message' => 'A new approved agenda has been added. Check your inbox for details.',
+                'timestamp' => now()->subHours(2)->toIso8601String(),
+                'priority' => 'high',
+                'read' => false,
+                'actionUrl' => '/dashboard/viewer/inbox',
+            ],
+            [
+                'id' => '2',
+                'type' => 'communication_approved',
+                'title' => 'Agenda Approved',
+                'message' => 'An agenda has been approved and is ready for review.',
+                'timestamp' => now()->subHours(6)->toIso8601String(),
+                'priority' => 'medium',
+                'read' => false,
+                'actionUrl' => '/dashboard/viewer/inbox',
+            ],
+            [
+                'id' => '3',
+                'type' => 'communication_forwarded',
+                'title' => 'Agenda Forwarded',
+                'message' => 'An approved agenda was forwarded to another office.',
+                'timestamp' => now()->subDays(1)->toIso8601String(),
+                'priority' => 'low',
+                'read' => true,
+                'actionUrl' => '/dashboard/viewer/inbox',
+            ],
+        ];
+
+        return Inertia::render('Dashboard/Viewer/Notifications/Index', [
+            'notifications' => $notifications,
             'auth' => [
                 'user' => $request->user(),
             ],
