@@ -36,7 +36,7 @@ export default function AdminLayout({ children }) {
     { name: "Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
     { name: "Users", href: "/dashboard/admin/users", icon: Users },
     { name: "Agendas", href: "/dashboard/admin/agendas", icon: Calendar },
-    { name: "Communications", href: "/dashboard/admin/messages", icon: Mail },
+    { name: "My Communications", href: "/dashboard/admin/messages", icon: Mail },
     { name: "Offices", href: "/dashboard/admin/offices", icon: Building },
     { name: "Announcements", href: "/dashboard/admin/announcements", icon: Megaphone },
     { name: "Reports", href: "/dashboard/admin/reports", icon: FileText },
